@@ -1,13 +1,12 @@
 const { Video } = require("../models/video.model");
+const { errorResponse, successResponse } = require(".././utils");
 
 const getAllVideos = async (req, res) => {
   try {
     const videoList = await Video.find({}).select("-__v");
     res.status(200).json({ success: true, videoList });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, errorMessage: error.message });
+    return errorResponse(res, "Could not retrieve videos", error);
   }
 };
 
@@ -23,9 +22,7 @@ const addVideo = async (req, res) => {
       videoList: updatedVideoList,
     });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, errorMessage: error.message });
+    return errorResponse(res, "Could not add the video", error);
   }
 };
 
@@ -35,10 +32,39 @@ const removeVideo = async (req, res) => {
     const removedVideo = await Video.findByIdAndDelete(videoId);
     return res.status(200).json({ success: true, removedVideo });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ success: false, errorMessage: error.message });
+    return errorResponse(res, "Could not remove the video", error);
   }
 };
 
-module.exports = { addVideo, getAllVideos, removeVideo };
+const videoIdCheck = async (req, res, next, videoId) => {
+  try {
+    const video = await Video.findOne({ _id: videoId });
+    video.__v = undefined;
+    if (!video) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Video not found" });
+    }
+    req.videoId = videoId;
+    req.video = video;
+    next();
+  } catch (error) {
+    return errorResponse(res, "Could not retrieve video", error);
+  }
+};
+
+const getVideo = async (req, res) => {
+  const { video } = req;
+  return successResponse(res, {
+    message: "Video retrieved successfully",
+    video,
+  });
+};
+
+module.exports = {
+  addVideo,
+  getAllVideos,
+  removeVideo,
+  getVideo,
+  videoIdCheck,
+};

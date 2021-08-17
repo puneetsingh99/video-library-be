@@ -38,7 +38,7 @@ const removeVideo = async (req, res) => {
 
 const videoIdCheck = async (req, res, next, videoId) => {
   try {
-    const video = await Video.findOne({ _id: videoId });
+    const video = await Video.findOne({ videoId: videoId });
     video.__v = undefined;
     if (!video) {
       return res

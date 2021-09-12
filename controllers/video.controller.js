@@ -61,10 +61,34 @@ const getVideo = async (req, res) => {
   });
 };
 
+const searchVideo = async (req, res) => {
+  try {
+    const { searchKey } = req.body;
+    if (!searchKey) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Empty search key" });
+    }
+    let regex = new RegExp(searchKey, "i");
+    const matchingVideos = await Video.find({
+      $and: [
+        {
+          $or: [{ title: regex }, { category: regex }],
+        },
+      ],
+    });
+
+    return res.status(200).json({ success: true, matchingVideos });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   addVideo,
   getAllVideos,
   removeVideo,
   getVideo,
   videoIdCheck,
+  searchVideo,
 };

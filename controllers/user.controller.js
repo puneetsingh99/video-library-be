@@ -29,7 +29,7 @@ const deleteAllUser = async (req, res) => {
 const userIdCheck = async (req, res, next, userId) => {
   try {
     const user = await User.findOne({ _id: userId })
-      .populate("playlists")
+      .populate("playlists.videos")
       .select("-password -email -__v -createdAt -updatedAt");
 
     if (!user) {

@@ -1,4 +1,5 @@
 const { User } = require("../models/user.model");
+const { Video } = require("../models/video.model");
 const { successResponse, errorResponse } = require("../utils");
 const { extend } = require("lodash");
 
@@ -64,6 +65,9 @@ const updateUser = async (req, res) => {
 
     if (updateData.operation === "addToPlaylist") {
       const { videoId, playlistName } = updateData;
+
+      const video = await Video.findOne({ videoId: videoId });
+
       const playlistIndex = userToBeUpdated.playlists.findIndex(
         (playlist) => playlist.playlistName === playlistName
       );
@@ -71,7 +75,7 @@ const updateUser = async (req, res) => {
       if (playlistIndex === -1) {
         const newPlaylist = {
           playlistName,
-          videos: [videoId],
+          videos: [video._id],
         };
         userToBeUpdated.playlists.unshift(newPlaylist);
 
@@ -88,7 +92,9 @@ const updateUser = async (req, res) => {
 
       const videoAlreadyExists = userToBeUpdated.playlists[
         playlistIndex
-      ].videos.find((video) => String(video) === videoId);
+      ].videos.find((v) => {
+        return String(v) === String(video._id);
+      });
 
       if (videoAlreadyExists) {
         return res.status(500).json({
@@ -97,7 +103,7 @@ const updateUser = async (req, res) => {
         });
       }
 
-      userToBeUpdated.playlists[playlistIndex].videos.unshift(videoId);
+      userToBeUpdated.playlists[playlistIndex].videos.unshift(video._id);
       const updatedUser = await userToBeUpdated.save();
       updatedUser.__v = undefined;
       updatedUser.email = undefined;
@@ -111,6 +117,8 @@ const updateUser = async (req, res) => {
 
     if (updateData.operation === "removeFromPlaylist") {
       const { videoId, playlistName } = updateData;
+      const video = await Video.findOne({ videoId: videoId });
+
       const playlistIndex = userToBeUpdated.playlists.findIndex(
         (playlist) => playlist.playlistName === playlistName
       );
@@ -123,7 +131,7 @@ const updateUser = async (req, res) => {
 
       userToBeUpdated.playlists[playlistIndex].videos =
         userToBeUpdated.playlists[playlistIndex].videos.filter(
-          (video) => String(video) !== videoId
+          (v) => String(v) !== String(video._id)
         );
 
       const updatedUser = await userToBeUpdated.save();
@@ -205,6 +213,8 @@ const deleteUser = async (req, res) => {
     return errorResponse(res, "Could not delete the user", error);
   }
 };
+
+const isVideoPresent = async (req, res) => {};
 
 module.exports = {
   getAllUser,

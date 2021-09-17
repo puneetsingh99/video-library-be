@@ -96,7 +96,10 @@ const updateUser = async (req, res) => {
         return String(v) === String(video._id);
       });
 
-      if (videoAlreadyExists) {
+      if (
+        videoAlreadyExists &&
+        playlistName.trim().toLowerCase() !== "watch history"
+      ) {
         return res.status(500).json({
           success: false,
           message: "Video already exists in the said playlist",
